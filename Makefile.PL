@@ -12,6 +12,11 @@ WriteMakefile(
 	PL_FILES     => { },
 	PREREQ_PM    => {
 		'Test::use::ok' => 0,
+		'Test::TempDir' => 0,
+		'Test::Exception' => 0,
+		'Moose' => 0,
+		'namespace::clean' => '0.08',
+		'BerkeleyDB' => 0,
 	},
 );
 
