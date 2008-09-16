@@ -517,6 +517,9 @@ BerkeleyDB::Manager - General purpose L<BerkeleyDB> wrapper
 		die "error!"; # rolls back
 	});
 
+	# fetch all key/value pairs as a Data::Stream::Bulk
+	my $keys = $m->cursor_to_stream( db => $db );
+
 =head1 DESCRIPTION
 
 This object provides a convenience wrapper for L<BerkeleyDB>
