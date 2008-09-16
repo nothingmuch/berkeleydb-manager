@@ -203,7 +203,7 @@ sub register_db {
 sub close_db {
 	my ( $self, $name ) = @_;
 
-	delete $self->open_dbs->{$name};
+	delete($self->open_dbs->{$name})->db_close;
 }
 
 sub all_open_dbs {
