@@ -299,13 +299,15 @@ sub txn_do {
 
     my @result;
 
+	my $wantarray = wantarray; # gotta capture, eval { } has its own
+
     my ( $success, $err ) = do {
         local $@;
 
         my $success = eval {
-            if ( wantarray ) {
+            if ( $wantarray ) {
                 @result = $coderef->(@_);
-            } elsif( defined wantarray ) {
+            } elsif( defined $wantarray ) {
                 $result[0] = $coderef->(@_);
             } else {
                 $coderef->(@_);
