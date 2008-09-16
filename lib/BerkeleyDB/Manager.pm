@@ -9,7 +9,7 @@ use BerkeleyDB;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = "0.01";
+our $VERSION = "0.02";
 
 has open_dbs => (
 	isa => "HashRef",
