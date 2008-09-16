@@ -207,7 +207,13 @@ sub register_db {
 sub close_db {
 	my ( $self, $name ) = @_;
 
-	delete($self->open_dbs->{$name})->db_close;
+	if ( my $db = delete($self->open_dbs->{$name}) ) {
+		if ( $db->db_close != 0 ) {
+			die $BerkeleyDB::Error;
+		}
+	}
+
+	return 1;
 }
 
 sub all_open_dbs {
