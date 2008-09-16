@@ -38,7 +38,7 @@ use ok 'BerkeleyDB::Manager';
 				is( scalar(@all), scalar(@entries), "stream size is like entries size" );
 
 				is_deeply(
-					[ sort map { $_->[0] } @all ],
+					[ sort @all ],
 					[ sort @entries ],
 					"got all keys",
 				);
@@ -112,6 +112,26 @@ use ok 'BerkeleyDB::Manager';
 				is_deeply(
 					[ sort { $a->[1] <=> $b->[1] } @all ],
 					[ sort { $a->[1] <=> $b->[1] } @entries ],
+					"got all pairs",
+				);
+			}
+
+			{
+				my $s = $m->cursor_stream( db => $db, chunk_size => $chunk_size, values => 1 );
+
+				does_ok( $s, "Data::Stream::Bulk" );
+
+				ok( !$s->is_done, "not done" );
+
+				my @all = $s->all;
+
+				ok( $s->is_done, "now done" );
+
+				is( scalar(@all), scalar(@entries), "stream size is like entries size" );
+
+				is_deeply(
+					[ sort @all ],
+					[ sort map { $_->[1] } @entries ],
 					"got all pairs",
 				);
 			}

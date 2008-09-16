@@ -378,6 +378,10 @@ sub dup_cursor_stream {
 
 	my ( $init, $key, $first, $cb, $cursor, $db, $n ) = delete @args{qw(init key callback_first callback cursor db chunk_size)};
 
+	my ( $values, $keys ) = @args{qw(values keys)};
+	my $pairs = !$values && !$keys;
+	croak "'values' and 'keys' are mutually exclusive" if $values && $keys;
+
 	$key ||= '';
 
 	$cursor ||= ( $db || croak "either 'cursor' or 'db' is a required argument" )->db_cursor;
@@ -389,7 +393,7 @@ sub dup_cursor_stream {
 		my $ret;
 
 		if ( ( $ret = $c->c_get($key, $v, DB_SET) ) == 0 ) {
-			push(@$r, [ $key, $v ]);
+			push(@$r, $pairs ? [ $key, $v ] : ( $values ? $v : $key ));
 		} elsif ( $ret == DB_NOTFOUND ) {
 			return;
 		} else {
@@ -403,7 +407,7 @@ sub dup_cursor_stream {
 		my $v;
 		my $ret;
 		if ( ( $ret = $c->c_get($key, $v, DB_NEXT_DUP) ) == 0 ) {
-			push(@$r, [ $key, $v ]);
+			push(@$r, $pairs ? [ $key, $v ] : ( $values ? $v : $key ));
 		} elsif ( $ret == DB_NOTFOUND ) {
 			return;
 		} else {
@@ -446,6 +450,10 @@ sub cursor_stream {
 
 	my ( $init, $cb, $cursor, $db, $f, $n ) = delete @args{qw(init callback cursor db flag chunk_size)};
 
+	my ( $values, $keys ) = @args{qw(values keys)};
+	my $pairs = !$values && !$keys;
+	croak "'values' and 'keys' are mutually exclusive" if $values && $keys;
+
 	$cursor ||= ( $db || croak "either 'cursor' or 'db' is a required argument" )->db_cursor;
 
 	$f ||= DB_NEXT;
@@ -457,7 +465,7 @@ sub cursor_stream {
 			my ( $c, $r ) = @_;
 
 			if ( $c->c_get($k, $v, $f) == 0 ) {
-				push(@$r, [ $k, $v ]);
+				push(@$r, $pairs ? [ $k, $v ] : ( $values ? $v : $k ));
 			} elsif ( $c->status == DB_NOTFOUND ) {
 				return;
 			} else {
@@ -732,6 +740,9 @@ each cursor position. C<flag> can be passed, and defaults to C<DB_NEXT>.
 
 C<chunk_size> controls the number of pairs returned in each chunk. If it isn't
 provided the attribute C<chunk_size> is used instead.
+
+If C<values> or C<keys> is set to a true value then only values or keys will be
+returned. These two arguments are mutually exclusive.
 
 Lastly, C<init> is an optional callback that is invoked once before each chunk,
 that can be used to set up the database. The return value is retained until the
