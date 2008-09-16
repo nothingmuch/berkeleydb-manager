@@ -1,6 +1,3 @@
-- Data::Stream::Bulk support for cursors
-	- fetch duplicate keys
-	- key only fetching?
 - test recno, queue, etc
 - perllish convenience wrapper for db_set, db_get, etc?
 	- BDB::Wrapper is only for opening stuff
