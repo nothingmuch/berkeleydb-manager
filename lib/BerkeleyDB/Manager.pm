@@ -64,10 +64,10 @@ sub _build_env_flags {
 
 	if ( $self->transactions ) {
 		$flags |= DB_INIT_TXN;
-	}
 
-	if ( $self->recover ) {
-		$flags |= DB_REGISTER | DB_RECOVER;
+		if ( $self->recover ) {
+			$flags |= DB_REGISTER | DB_RECOVER;
+		}
 	}
 	
 	if ( $self->create ) {
@@ -87,7 +87,7 @@ sub _build_env {
     my $self = shift;
 
     BerkeleyDB::Env->new(
-        ( $self->has_home ? ( -Home  => $self->home ) : () ),
+        ( $self->has_home ? ( -Home => $self->home ) : () ),
         -Flags => $self->env_flags,
     ) || die $BerkeleyDB::Error;
 }
@@ -105,7 +105,7 @@ sub build_db_flags {
 
 	my $flags = 0;
 
-	if ( $args{autocommit} ) {
+	if ( $args{autocommit} and $self->env_flags & DB_INIT_TXN ) {
 		$flags |= DB_AUTO_COMMIT;
 	}
 
