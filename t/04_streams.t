@@ -25,7 +25,7 @@ use ok 'BerkeleyDB::Manager';
 
 		foreach my $chunk_size ( undef, 100, 1, 2, 3 ) {
 			{
-				my $s = $m->cursor_to_stream( db => $db, chunk_size => $chunk_size );
+				my $s = $m->cursor_stream( db => $db, chunk_size => $chunk_size, keys => 1 );
 
 				does_ok( $s, "Data::Stream::Bulk" );
 
@@ -47,7 +47,7 @@ use ok 'BerkeleyDB::Manager';
 			{
 				my ( $key, $value ) = ( '', '' );
 
-				my $s = $m->cursor_to_stream(
+				my $s = $m->cursor_stream(
 					chunk_size => $chunk_size,
 					db       => $db,
 					callback => sub {
@@ -97,7 +97,7 @@ use ok 'BerkeleyDB::Manager';
 
 		foreach my $chunk_size ( undef, 100, 1, 2, 3 ) {
 			{
-				my $s = $m->cursor_to_stream( db => $db, chunk_size => $chunk_size );
+				my $s = $m->cursor_stream( db => $db, chunk_size => $chunk_size );
 
 				does_ok( $s, "Data::Stream::Bulk" );
 
@@ -119,7 +119,7 @@ use ok 'BerkeleyDB::Manager';
 			{
 				my ( $key, $value ) = ( '', '' );
 
-				my $s = $m->cursor_to_stream(
+				my $s = $m->cursor_stream(
 					chunk_size => $chunk_size,
 					db       => $db,
 					callback => sub {
@@ -153,7 +153,7 @@ use ok 'BerkeleyDB::Manager';
 
 			{
 				my @foos = grep { $_->[0] eq 'foo' } @entries;
-				my $s = $m->dup_cursor_to_stream( db => $db, chunk_size => $chunk_size, key => "foo" );
+				my $s = $m->dup_cursor_stream( db => $db, chunk_size => $chunk_size, key => "foo" );
 
 				does_ok( $s, "Data::Stream::Bulk" );
 
@@ -173,7 +173,7 @@ use ok 'BerkeleyDB::Manager';
 			}
 
 			{
-				my $s = $m->dup_cursor_to_stream( db => $db, chunk_size => $chunk_size, key => "moose" );
+				my $s = $m->dup_cursor_stream( db => $db, chunk_size => $chunk_size, key => "moose" );
 
 				does_ok( $s, "Data::Stream::Bulk" );
 
@@ -193,7 +193,7 @@ use ok 'BerkeleyDB::Manager';
 			}
 
 			{
-				my $s = $m->dup_cursor_to_stream( db => $db, chunk_size => $chunk_size, key => "not present" );
+				my $s = $m->dup_cursor_stream( db => $db, chunk_size => $chunk_size, key => "not present" );
 
 				does_ok( $s, "Data::Stream::Bulk" );
 
