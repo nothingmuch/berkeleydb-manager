@@ -7,7 +7,6 @@ use Carp qw(croak);
 
 use BerkeleyDB;
 
-use Scope::Guard;
 use Data::Stream::Bulk::Util qw(nil);
 use Data::Stream::Bulk::Callback;
 use Data::Stream::Bulk::Array;
