@@ -105,7 +105,7 @@ sub build_db_flags {
 
 	my $flags = 0;
 
-	if ( $args{autocommit} and $self->env_flags & DB_INIT_TXN ) {
+	if ( $args{autocommit} and $self->env_flags & DB_INIT_TXN && !$self->_current_transaction ) {
 		$flags |= DB_AUTO_COMMIT;
 	}
 
@@ -197,6 +197,10 @@ sub open_db {
 sub register_db {
 	my ( $self, $name, $db ) = @_;
 
+	if ( my $frame = $self->_transaction_stack->[-1] ) {
+		push @$frame, $name;
+	}
+
 	$self->open_dbs->{$name} = $db;
 }
 
@@ -244,17 +248,31 @@ has _transaction_stack => (
 
 sub _current_transaction {
 	my $self = shift;
-	$self->_transaction_stack->[-1];
+
+	if ( my $frame = $self->_transaction_stack->[-1] ) {
+		return $frame->[0];
+	}
+
+	return;
 }
 
 sub _push_transaction {
 	my ( $self, $txn ) = @_;
-	push @{ $self->_transaction_stack }, $txn;
+	push @{ $self->_transaction_stack }, [ $txn ];
 }
 
 sub _pop_transaction {
 	my ( $self ) = @_;
-	pop @{ $self->_transaction_stack };
+
+	if ( my $d = pop @{ $self->_transaction_stack } ) {
+		my ( $txn, @dbs ) = @$d;
+
+		$self->close_db($_) for @dbs;
+
+		return $txn;
+	} else {
+		croak "Transaction stack underflowed";
+	}
 }
 
 sub txn_do {

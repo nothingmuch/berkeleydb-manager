@@ -230,3 +230,68 @@ chdir temp_root(); # don't make a mess
 		is( $v, "hippies", "'oi' key" );
 	}
 }
+
+{
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", transactions => 0 ), "BerkeleyDB::Manager" );
+
+	ok( !$m->transactions, "no txns" );
+
+	my $db = $m->open_db( file => "naughty.db" );
+
+	isa_ok( $db, "BerkeleyDB::Btree" );
+
+	is_deeply([ $m->all_open_dbs ], [ $db ], "open DBs" );
+
+	throws_ok { $m->txn_begin } qr/transaction.*not enabled/i, "can't begin transaction if transactions are disabled";
+
+	ok( $db->db_put("bollocks", "moose") == 0, "db_put outside of txn" );
+
+	ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+	is( $v, "moose", "value" );
+}
+
+{
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", autocommit => 0 ), "BerkeleyDB::Manager" );
+
+	ok( $m->transactions, "txns enabled" );
+	ok( !$m->autocommit, "autocommit disabled" );
+
+	$m->txn_do(sub {
+		my $db = $m->open_db("nice.db");
+
+		isa_ok( $db, "BerkeleyDB::Btree" );
+
+		is_deeply([ $m->all_open_dbs ], [ $db ], "open DBs" );
+
+		ok( $db->db_put("bollocks", "moose") == 0, "db_put outside of txn" );
+
+		ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+		is( $v, "moose", "value" );
+	});
+
+	ok( !$m->get_db("nice.db"), "no more db handle" );
+
+	$m->txn_do(sub {
+		ok( my $db = $m->open_db("nice.db"), "reopen" );
+
+		ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+		is( $v, "moose", "value" );
+	});
+
+	ok( !$m->get_db("nice.db"), "no more db handle" );
+
+	{
+		my $db = $m->open_db("nice.db");
+
+		$m->txn_do(sub {
+			ok( $db->db_put("bollocks", "orchid") != 0, "error in db_put with autocommit off, inside txn that was not opened in txn" );
+		});
+
+		ok( $db->db_put("bollocks", "elk") == 0, "no error (no txn) db_put with autocommit off" );
+
+		ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+		is( $v, "elk", "new value" );
+
+		$m->close_db("nice.db");
+	}
+}
