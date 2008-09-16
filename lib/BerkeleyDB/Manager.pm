@@ -7,6 +7,11 @@ use Carp qw(croak);
 
 use BerkeleyDB;
 
+use Scope::Guard;
+use Data::Stream::Bulk::Util qw(nil);
+use Data::Stream::Bulk::Callback;
+use Data::Stream::Bulk::Array;
+
 use namespace::clean -except => 'meta';
 
 our $VERSION = "0.02";
@@ -55,6 +60,12 @@ has db_flags => (
 	isa => "Int",
 	is  => "ro",
 	predicate => "has_db_flags",
+);
+
+has chunk_size => (
+	isa => "Int",
+	is  => "rw",
+	default => 500,
 );
 
 sub _build_env_flags {
@@ -271,11 +282,8 @@ sub _pop_transaction {
 	my ( $self ) = @_;
 
 	if ( my $d = pop @{ $self->_transaction_stack } ) {
-		my ( $txn, @dbs ) = @$d;
-
-		$self->close_db($_) for @dbs;
-
-		return $txn;
+		shift @$d;
+		$self->close_db($_) for @$d;
 	} else {
 		croak "Transaction stack underflowed";
 	}
@@ -312,9 +320,9 @@ sub txn_do {
         ( $success, $@ );
     };
 
-	$self->_pop_transaction;
-
     if ( $success ) {
+		undef $txn;
+		$self->_pop_transaction;
         return wantarray ? @result : $result[0];
     } else {
 		my $rollback_exception = do {
@@ -322,6 +330,9 @@ sub txn_do {
 			eval { $self->txn_rollback($txn) };
 			$@;
 		};
+
+		undef $txn;
+		$self->_pop_transaction;
 
 		if ($rollback_exception) {
 			croak "Transaction aborted: $err, rollback failed: $rollback_exception";
@@ -359,6 +370,124 @@ sub txn_rollback {
     }
 
 	return 1;
+}
+
+sub dup_cursor_to_stream {
+	my ( $self, @args ) = @_;
+
+	my %args = @args;
+
+	my ( $init, $key, $first, $cb, $cursor, $db, $n ) = delete @args{qw(init key callback_first callback cursor db chunk_size)};
+
+	$key ||= '';
+
+	$cursor ||= ( $db || croak "either 'cursor' or 'db' is a required argument" )->db_cursor;
+
+	$first ||= sub {
+		my ( $c, $r ) = @_;
+		my $v;
+
+		my $ret;
+
+		if ( ( $ret = $c->c_get($key, $v, DB_SET) ) == 0 ) {
+			push(@$r, [ $key, $v ]);
+		} elsif ( $ret == DB_NOTFOUND ) {
+			return;
+		} else {
+			die $BerkeleyDB::Error;
+		}
+
+	};
+
+	$cb ||= sub {
+		my ( $c, $r ) = @_;
+		my $v;
+		my $ret;
+		if ( ( $ret = $c->c_get($key, $v, DB_NEXT_DUP) ) == 0 ) {
+			push(@$r, [ $key, $v ]);
+		} elsif ( $ret == DB_NOTFOUND ) {
+			return;
+		} else {
+			die $BerkeleyDB::Error;
+		}
+	};
+
+	$n ||= $self->chunk_size;
+
+	my $g = $init && $self->$init(%args);
+
+	my $ret = [];
+	my $bulk = Data::Stream::Bulk::Array->new( array => $ret );
+
+	if ( $cursor->$first($ret) ) {
+		$cursor->c_count(my $count);
+
+		if ( $count > 1 ) { # more entries for the same value
+
+			# fetch up to $n times
+			for ( 1 .. $n-1 ) {
+				unless ( $cursor->$cb($ret) ) {
+					return $bulk;
+				}
+			}
+
+			# and defer the rest
+			my $rest = $self->cursor_to_stream(@args, callback => $cb, cursor => $cursor);
+			return $bulk->cat($rest);
+		}
+
+		return $bulk;
+	} else {
+		return nil();
+	}
+}
+
+sub cursor_to_stream {
+    my ( $self, %args ) = @_;
+
+	my ( $init, $cb, $cursor, $db, $f, $n ) = delete @args{qw(init callback cursor db flag chunk_size)};
+
+	$cursor ||= ( $db || croak "either 'cursor' or 'db' is a required argument" )->db_cursor;
+
+	$f ||= DB_NEXT;
+
+	$cb ||= do {
+		my ( $k, $v ) = ( '', '' );
+
+		sub {
+			my ( $c, $r ) = @_;
+
+			if ( $c->c_get($k, $v, $f) == 0 ) {
+				push(@$r, [ $k, $v ]);
+			} elsif ( $c->status == DB_NOTFOUND ) {
+				return;
+			} else {
+				die $BerkeleyDB::Error;
+			}
+		}
+	};
+
+	$n ||= $self->chunk_size;
+
+    Data::Stream::Bulk::Callback->new(
+        callback => sub {
+            return unless $cursor;
+
+            my $g = $init && $self->$init(%args);
+
+			my $ret = [];
+
+            for ( 1 .. $n ) {
+                unless ( $cursor->$cb($ret) ) {
+                    # we're done, this is the last block
+                    undef $cursor;
+                    return ( scalar(@$ret) && $ret );
+                }
+            }
+
+            return $ret;
+        },
+    );
 }
 
 __PACKAGE__->meta->make_immutable;
@@ -460,6 +589,12 @@ Properties to pass to C<instantiate_db>. Overrides C<dup> and C<dupsort>.
 =item open_dbs
 
 The hash of currently open dbs.
+
+=item chunk_size
+
+See C<cursor_to_stream>.
+
+Defaults to 500.
 
 =back
 
@@ -563,6 +698,56 @@ See the BDB documentation for more details.
 =item all_open_dbs
 
 Returns a list of all the registered databases.
+
+=item cursor_to_stream %args
+
+Fetches data from a cursor, returning a L<Data::Stream::Bulk>.
+
+If C<cursor> is not provided but C<db> is, a new cursor will be created.
+
+If C<callback> is provided it will be invoked on the cursor with an accumilator
+array repeatedly until it returns a false value. For example, to extract
+triplets from a secondary index, you can use this callback:
+
+	my ( $sk, $pk, $v ) = ( '', '', '' ); # to avoid uninitialized warnings from BDB
+
+	$m->cursor_to_stream(
+		db => $db,
+		callback => {
+			my ( $cursor, $accumilator ) = @_;
+
+			if ( $cursor->c_pget( $sk, $pk, $v ) == 0 ) {
+				push @$accumilator, [ $sk, $pk, $v ];
+				return 1;
+			}
+
+			return; # nothing left
+		}
+	);
+
+If it is not provided, C<c_get> will be used, returning C<[ $key, $value ]> for
+each cursor position. C<flag> can be passed, and defaults to C<DB_NEXT>.
+
+C<chunk_size> controls the number of pairs returned in each chunk. If it isn't
+provided the attribute C<chunk_size> is used instead.
+
+Lastly, C<init> is an optional callback that is invoked once before each chunk,
+that can be used to set up the database. The return value is retained until the
+chunk is finished, so this callback can return a L<Scope::Guard> to perform
+cleanup.
+
+=item dup_cursor_to_stream %args
+
+A specialization of C<cursor_to_stream> for fetching duplicate key entries.
+
+Takes the same arguments as C<cursor_to_stream>, but adds a few more.
+
+C<key> can be passed in to initialize the cursor with C<DB_SET>.
+
+To do manual initialization C<callback_first> can be provided instead.
+
+C<callback> is generated to use C<DB_NEXT_DUP> instead of C<DB_NEXT>, and
+C<flag> is ignored.
 
 =back
 
