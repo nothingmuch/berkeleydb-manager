@@ -17,12 +17,12 @@ has open_dbs => (
 	default => sub { +{} },
 );
 
-has [qw(dup dupsort)] => (
+has [qw(dup dupsort)] => ( # read_uncomitted log_autoremove multiversion
 	isa => "Bool",
 	is  => "ro",
 );
 
-has [qw(autocommit transactions recover create)] => (
+has [qw(autocommit transactions recover create)] => ( # snapshot, sync
 	isa => "Bool",
 	is  => "ro",
 	default => 1,
