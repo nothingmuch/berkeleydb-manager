@@ -69,7 +69,7 @@ sub _build_env_flags {
 			$flags |= DB_REGISTER | DB_RECOVER;
 		}
 	}
-	
+
 	if ( $self->create ) {
 		$flags |= DB_CREATE;
 	}
@@ -131,7 +131,7 @@ sub build_db_properties {
 
 	if ( $args{dup} ) {
 		$props |= DB_DUP;
-		
+
 		if ( $args{dupsort} ) {
 			$props |= DB_DUPSORT;
 		}
@@ -160,7 +160,7 @@ sub instantiate_db {
 
 	my $flags = $args{flags}      || $self->build_db_flags(%args);
 	my $props = $args{properties} || $self->build_db_properties(%args);
-	
+
 	my $txn   = $args{txn} || ( $self->env_flags & DB_INIT_TXN && $self->_current_transaction );
 
 	$class->new(
@@ -213,7 +213,7 @@ sub close_db {
 sub all_open_dbs {
 	my $self = shift;
 	values %{ $self->open_dbs };
-}	
+}
 
 sub associate {
 	my ( $self, %args ) = @_;
@@ -425,8 +425,6 @@ If true (the default) C<DB_REGISTER> and C<DB_RECOVER> are enabled in the flags
 to the env.
 
 This will enable automatic recovery in case of a crash.
-
-=item 
 
 =item dup
 
