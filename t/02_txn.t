@@ -23,33 +23,52 @@ chdir temp_root(); # don't make a mess
 
 	is_deeply([ $m->all_open_dbs ], [ $db ], "open DBs" );
 
+	my ( $commit, $rollback );
+
 	throws_ok {
-		$m->txn_do(sub {
-			ok( $db->db_get("foo", my $v) != 0, "get failed" );
+		$m->txn_do(
+			sub {
+				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-			ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
 
-			ok( $db->db_get("foo", $v) == 0, "no error in get" );
-			is( $v, "bar", "'foo' key" );
+				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				is( $v, "bar", "'foo' key" );
 
-			die "error";
-		});
+				die "error";
+			},
+			rollback => sub { $rollback++ },
+			commit   => sub { $commit++ },
+		);
 	} qr/error/, "dies in txn";
+
+	ok( $rollback, "rollback callback triggered" );
+	ok( !$commit, "commit callback not triggered" );
 
 	{
 		ok( $db->db_get("foo", my $v) != 0, "get failed (transaction aborted)" );
 	}
 
+	undef $commit;
+	undef $rollback;
+
 	lives_ok {
-		$m->txn_do(sub {
-			ok( $db->db_get("foo", my $v) != 0, "get failed" );
+		$m->txn_do(
+			sub {
+				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-			ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
 
-			ok( $db->db_get("foo", $v) == 0, "no error in get" );
-			is( $v, "bar", "'foo' key" );
-		});
+				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				is( $v, "bar", "'foo' key" );
+			},
+			rollback => sub { $rollback++ },
+			commit   => sub { $commit++ },
+		);
 	} "no error in txn";
+
+	ok( !$rollback, "rollback trigger not called" );
+	ok( $commit, "commit trigger called" );
 
 	{
 		ok( $db->db_get("foo", my $v) == 0, "no error in get (transaction comitted)" );

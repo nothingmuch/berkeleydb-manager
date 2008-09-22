@@ -289,46 +289,51 @@ sub _pop_transaction {
 }
 
 sub txn_do {
-    my ( $self, $coderef ) = ( shift, shift );
+	my ( $self, $coderef, %args ) = @_;
 
-    ref $coderef eq 'CODE' or croak '$coderef must be a CODE reference';
+	my @args = @{ $args{args} || [] };
+
+	my ( $commit, $rollback ) = @args{qw(commit rollback)};
+
+	ref $coderef eq 'CODE' or croak '$coderef must be a CODE reference';
 
 	my $txn = $self->txn_begin( $self->_current_transaction );
 
 	$self->_push_transaction($txn);
 
-    my @result;
+	my @result;
 
 	my $wantarray = wantarray; # gotta capture, eval { } has its own
 
-    my ( $success, $err ) = do {
-        local $@;
+	my ( $success, $err ) = do {
+		local $@;
 
-        my $success = eval {
-            if ( $wantarray ) {
-                @result = $coderef->(@_);
-            } elsif( defined $wantarray ) {
-                $result[0] = $coderef->(@_);
-            } else {
-                $coderef->(@_);
-            }
+		my $success = eval {
+			if ( $wantarray ) {
+				@result = $coderef->(@args);
+			} elsif( defined $wantarray ) {
+				$result[0] = $coderef->(@args);
+			} else {
+				$coderef->(@args);
+			}
 
-            $self->txn_commit($txn);
+			$commit && $commit->();
+			$self->txn_commit($txn);
 
-            1;
-        };
+			1;
+		};
 
-        ( $success, $@ );
-    };
+		( $success, $@ );
+	};
 
-    if ( $success ) {
+	if ( $success ) {
 		undef $txn;
 		$self->_pop_transaction;
-        return wantarray ? @result : $result[0];
-    } else {
+		return wantarray ? @result : $result[0];
+	} else {
 		my $rollback_exception = do {
 			local $@;
-			eval { $self->txn_rollback($txn) };
+			eval { $self->txn_rollback($txn); $rollback && $rollback->() };
 			$@;
 		};
 
@@ -340,35 +345,35 @@ sub txn_do {
 		}
 
 		die $err;
-    }
+	}
 }
 
 sub txn_begin {
-    my ( $self, $parent_txn ) = @_;
+	my ( $self, $parent_txn ) = @_;
 
-    my $txn = $self->env->TxnMgr->txn_begin($parent_txn || ()) || die $BerkeleyDB::Error;
+	my $txn = $self->env->TxnMgr->txn_begin($parent_txn || ()) || die $BerkeleyDB::Error;
 
-    $txn->Txn($self->all_open_dbs);
+	$txn->Txn($self->all_open_dbs);
 
-    return $txn;
+	return $txn;
 }
 
 sub txn_commit {
-    my ( $self, $txn ) = @_;
+	my ( $self, $txn ) = @_;
 
-    unless ( $txn->txn_commit == 0 ) {
-        die $BerkeleyDB::Error;
-    }
+	unless ( $txn->txn_commit == 0 ) {
+		die $BerkeleyDB::Error;
+	}
 
 	return 1;
 }
 
 sub txn_rollback {
-    my ( $self, $txn ) = @_;
+	my ( $self, $txn ) = @_;
 
-    unless ( $txn->txn_abort == 0 ) {
-        die $BerkeleyDB::Error;
-    }
+	unless ( $txn->txn_abort == 0 ) {
+		die $BerkeleyDB::Error;
+	}
 
 	return 1;
 }
@@ -448,7 +453,7 @@ sub dup_cursor_stream {
 }
 
 sub cursor_stream {
-    my ( $self, %args ) = @_;
+	my ( $self, %args ) = @_;
 
 	my ( $init, $cb, $cursor, $db, $f, $n ) = delete @args{qw(init callback cursor db flag chunk_size)};
 
@@ -478,25 +483,25 @@ sub cursor_stream {
 
 	$n ||= $self->chunk_size;
 
-    Data::Stream::Bulk::Callback->new(
-        callback => sub {
-            return unless $cursor;
+	Data::Stream::Bulk::Callback->new(
+		callback => sub {
+			return unless $cursor;
 
-            my $g = $init && $self->$init(%args);
+			my $g = $init && $self->$init(%args);
 
 			my $ret = [];
 
-            for ( 1 .. $n ) {
-                unless ( $cursor->$cb($ret) ) {
-                    # we're done, this is the last block
-                    undef $cursor;
-                    return ( scalar(@$ret) && $ret );
-                }
-            }
+			for ( 1 .. $n ) {
+				unless ( $cursor->$cb($ret) ) {
+					# we're done, this is the last block
+					undef $cursor;
+					return ( scalar(@$ret) && $ret );
+				}
+			}
 
-            return $ret;
-        },
-    );
+			return $ret;
+		},
+	);
 }
 
 __PACKAGE__->meta->make_immutable;
