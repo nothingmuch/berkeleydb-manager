@@ -13,7 +13,7 @@ use Data::Stream::Bulk::Array;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = "0.04";
+our $VERSION = "0.05";
 
 has open_dbs => (
 	isa => "HashRef",
