@@ -127,6 +127,11 @@ sub build_db_flags {
 	my $flags = 0;
 
 	if ( $args{autocommit} and $self->env_flags & DB_INIT_TXN && !$self->_current_transaction ) {
+		# if there is a current transaction the DB open and all subsequent
+		# operations are already protected by it, an specifying auto commit
+		# will fail
+		# furthermore, specifying autocommit without having transactions makes
+		# no sense
 		$flags |= DB_AUTO_COMMIT;
 	}
 
