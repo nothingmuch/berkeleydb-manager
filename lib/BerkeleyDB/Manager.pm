@@ -27,6 +27,7 @@ has [qw(
 	recover
 	create
 	multiversion
+	readonly
 )] => (
 	isa => "Bool",
 	is  => "ro",
@@ -119,7 +120,7 @@ sub build_db_flags {
 		return $self->db_flags;
 	}
 
-	foreach my $opt ( qw(autocommit create) ) {
+	foreach my $opt ( qw(autocommit create readonly) ) {
 		$args{$opt} = $self->$opt unless exists $args{$opt};
 	}
 
@@ -131,6 +132,10 @@ sub build_db_flags {
 
 	if ( $args{create} ) {
 		$flags |= DB_CREATE;
+	}
+
+	if ( $args{readonly} ) {
+		$flags |= DB_RDONLY;
 	}
 
 	return $flags;
