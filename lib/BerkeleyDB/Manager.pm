@@ -24,6 +24,7 @@ has open_dbs => (
 has [qw(
 	dup
 	dupsort
+	recover
 )] => (
 	isa => "Bool",
 	is  => "ro",
@@ -32,7 +33,6 @@ has [qw(
 has [qw(
 	autocommit
 	transactions
-	recover
 	create
 )] => (
 	isa => "Bool",
@@ -581,8 +581,7 @@ transaction, unless transactions are disabled.
 
 =item recover
 
-If true (the default) C<DB_REGISTER> and C<DB_RECOVER> are enabled in the flags
-to the env.
+If true C<DB_REGISTER> and C<DB_RECOVER> are enabled in the flags to the env.
 
 This will enable automatic recovery in case of a crash.
 
