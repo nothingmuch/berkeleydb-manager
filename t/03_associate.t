@@ -9,7 +9,7 @@ use Test::TempDir;
 use ok 'BerkeleyDB::Manager';
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root, create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 

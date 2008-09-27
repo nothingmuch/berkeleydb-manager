@@ -12,7 +12,7 @@ chdir temp_root(); # don't make a mess
 use ok "BerkeleyDB::Manager";
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new, "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -25,7 +25,7 @@ use ok "BerkeleyDB::Manager";
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => "." ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 

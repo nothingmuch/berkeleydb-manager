@@ -12,7 +12,7 @@ use BerkeleyDB qw(DB_NEXT);
 use ok 'BerkeleyDB::Manager';
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root() ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root(), create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -83,7 +83,7 @@ use ok 'BerkeleyDB::Manager';
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root(), dup => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root(), dup => 1, create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 

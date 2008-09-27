@@ -25,6 +25,7 @@ has [qw(
 	dup
 	dupsort
 	recover
+	create
 	multiversion
 )] => (
 	isa => "Bool",
@@ -34,7 +35,6 @@ has [qw(
 has [qw(
 	autocommit
 	transactions
-	create
 	sync
 )] => (
 	isa => "Bool",
@@ -565,7 +565,7 @@ transaction journals, etc.
 =item create
 
 Whether C<DB_CREATE> is passed to C<Env> or C<instantiate_db> by default. Defaults to
-true.
+false.
 
 =item transactions
 

@@ -12,7 +12,7 @@ use ok "BerkeleyDB::Manager";
 chdir temp_root(); # don't make a mess
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => "." ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -77,7 +77,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => "." ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -117,7 +117,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => "." ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -251,7 +251,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", transactions => 0 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", transactions => 0, create => 1 ), "BerkeleyDB::Manager" );
 
 	ok( !$m->transactions, "no txns" );
 
@@ -270,7 +270,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", autocommit => 0 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", autocommit => 0, create => 1 ), "BerkeleyDB::Manager" );
 
 	ok( $m->transactions, "txns enabled" );
 	ok( !$m->autocommit, "autocommit disabled" );
