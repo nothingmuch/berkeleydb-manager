@@ -21,12 +21,20 @@ has open_dbs => (
 	default => sub { +{} },
 );
 
-has [qw(dup dupsort)] => ( # read_uncomitted log_autoremove multiversion
+has [qw(
+	dup
+	dupsort
+)] => (
 	isa => "Bool",
 	is  => "ro",
 );
 
-has [qw(autocommit transactions recover create)] => ( # snapshot, sync
+has [qw(
+	autocommit
+	transactions
+	recover
+	create
+)] => (
 	isa => "Bool",
 	is  => "ro",
 	default => 1,
