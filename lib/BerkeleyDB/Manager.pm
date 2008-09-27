@@ -25,6 +25,7 @@ has [qw(
 	dup
 	dupsort
 	recover
+	multiversion
 )] => (
 	isa => "Bool",
 	is  => "ro",
@@ -34,6 +35,7 @@ has [qw(
 	autocommit
 	transactions
 	create
+	sync
 )] => (
 	isa => "Bool",
 	is  => "ro",
@@ -585,13 +587,27 @@ If true C<DB_REGISTER> and C<DB_RECOVER> are enabled in the flags to the env.
 
 This will enable automatic recovery in case of a crash.
 
+See also the F<db_recover> utility, and
+L<file:///usr/local/BerkeleyDB/docs/gsg_txn/C/architectrecovery.html#multiprocessrecovery>
+
+=item multiversion
+
+Enables multiversioning concurrency.
+
+See
+L<http://www.oracle.com/technology/documentation/berkeley-db/db/gsg_txn/C/isolation.html#snapshot_isolation>
+
 =item dup
 
-Enables C<DB_DUP> in C<-Properties> by default, allowing duplicate keys in the db.
+Enables C<DB_DUP> in C<-Properties>, allowing duplicate keys in the db.
+
+Defaults to false.
 
 =item dupsort
 
-Enables C<DB_DUPSORT> in C<-Properties> by default.
+Enables C<DB_DUPSORT> in C<-Properties>.
+
+Defaults to false.
 
 =item db_class
 
