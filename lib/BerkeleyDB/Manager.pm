@@ -192,6 +192,10 @@ sub build_db_flags {
 		$flags |= DB_RDONLY;
 	}
 
+	if ( $args{multiversion} ) {
+		$flags |= DB_MULTIVERSION;
+	}
+
 	return $flags;
 }
 
@@ -420,7 +424,7 @@ sub txn_do {
 sub txn_begin {
 	my ( $self, $parent_txn ) = @_;
 
-	my $txn = $self->env->TxnMgr->txn_begin($parent_txn || ()) || die $BerkeleyDB::Error;
+	my $txn = $self->env->TxnMgr->txn_begin($parent_txn || undef, $self->multiversion ? DB_TXN_SNAPSHOT : 0 ) || die $BerkeleyDB::Error;
 
 	$txn->Txn($self->all_open_dbs);
 
