@@ -243,8 +243,8 @@ sub instantiate_db {
 	my $txn   = $args{txn} || ( $self->env_flags & DB_INIT_TXN && $self->_current_transaction );
 
 	$class->new(
-        -Filename => $file,
-        -Env      => $self->env,
+		-Filename => $file,
+		-Env      => $self->env,
 		( $txn   ? ( -Txn      => $txn   ) : () ),
 		( $flags ? ( -Flags    => $flags ) : () ),
 		( $props ? ( -Property => $props ) : () ),
@@ -313,15 +313,15 @@ sub associate {
 	}
 
     if( $primary->associate( $secondary, sub {
-        my ( $id, $val ) = @_;
+		my ( $id, $val ) = @_;
 
 		if ( defined ( my $value = $callback->($id, $val) ) ) {
 			$_[2] = $value;
 		}
 
-        return 0;
+		return 0;
     } ) != 0 ) {
-        die $BerkeleyDB::Error;
+		die $BerkeleyDB::Error;
     }
 }
 
