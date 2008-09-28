@@ -13,9 +13,15 @@ use Data::Stream::Bulk::Array;
 
 use Path::Class;
 
+use Moose::Util::TypeConstraints;
+
 use namespace::clean -except => 'meta';
 
 our $VERSION = "0.05";
+
+coerce( __PACKAGE__,
+	from HashRef => via { __PACKAGE__->new(%$_) },
+);
 
 has open_dbs => (
 	isa => "HashRef",
