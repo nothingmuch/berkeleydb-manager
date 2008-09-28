@@ -30,6 +30,7 @@ has [qw(
 	create
 	multiversion
 	readonly
+	log_auto_remove
 )] => (
 	isa => "Bool",
 	is  => "ro",
@@ -155,11 +156,21 @@ sub _build_env {
 		}
 	}
 
-	BerkeleyDB::Env->new(
+	my $env = BerkeleyDB::Env->new(
 		( $self->has_home ? ( -Home => $self->home ) : () ),
 		-Flags  => $self->env_flags,
 		-Config => $self->env_config,
 	) || die $BerkeleyDB::Error;
+
+	if ( $self->log_auto_remove ) {
+		if ( $env->can("log_set_config") ) {
+			$env->log_set_config( DB_LOG_AUTO_REMOVE, 1 );
+		} else {
+			croak "log_auto_remove specified but the log_set_config method is not available in this version of BerkeleyDB";
+		}
+	}
+
+	return $env;
 }
 
 sub build_db_flags {
