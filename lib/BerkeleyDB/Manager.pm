@@ -182,35 +182,59 @@ sub _build_env {
 sub build_db_flags {
 	my ( $self, %args ) = @_;
 
-	if ( $self->has_db_flags ) {
-		return $self->db_flags;
-	}
-
-	foreach my $opt ( qw(autocommit create readonly) ) {
-		$args{$opt} = $self->$opt unless exists $args{$opt};
+	if ( exists $args{flags} ) {
+		return $args{flags};
 	}
 
 	my $flags = 0;
 
-	if ( $args{autocommit} and $self->env_flags & DB_INIT_TXN && !$self->_current_transaction ) {
-		# if there is a current transaction the DB open and all subsequent
-		# operations are already protected by it, an specifying auto commit
-		# will fail
-		# furthermore, specifying autocommit without having transactions makes
-		# no sense
-		$flags |= DB_AUTO_COMMIT;
+	if ( $self->has_db_flags ) {
+		$flags = $self->db_flags;
+	} else {
+		foreach my $opt ( qw(create readonly) ) {
+			$args{$opt} = $self->$opt unless exists $args{$opt};
+		}
+
+		unless ( exists $args{autocommit} ) {
+			# if there is a current transaction the DB open and all subsequent
+			# operations are already protected by it, an specifying auto commit
+			# will fail
+			# furthermore, specifying autocommit without having transactions makes
+			# no sense
+			$args{autocommit} = $self->autocommit && $self->env_flags & DB_INIT_TXN && !$self->_current_transaction;
+		}
 	}
 
-	if ( $args{create} ) {
-		$flags |= DB_CREATE;
+	if ( exists $args{autocommit} ) {
+		if ( $args{autocommit} ) {
+			$flags |= DB_AUTO_COMMIT;
+		} else {
+			$flags &= ~DB_AUTO_COMMIT;
+		}
 	}
 
-	if ( $args{readonly} ) {
-		$flags |= DB_RDONLY;
+	if ( exists $args{create} ) {
+		if ( $args{create} ) {
+			$flags |= DB_CREATE;
+		} else { 
+			$flags &= ~DB_CREATE;
+		}
 	}
 
-	if ( $args{multiversion} ) {
-		$flags |= DB_MULTIVERSION;
+	if ( exists $args{readonly} ) {
+		if ( $args{readonly} ) {
+			$flags |= DB_RDONLY;
+		} else {
+			$flags &= ~DB_RDONLY;
+		}
+	}
+
+	if ( exists $args{multiversion} ) {
+		if ( $args{multiversion} ) {
+			$flags |= DB_MULTIVERSION;
+		} else {
+			$flags &= ~DB_MULTIVERSION;
+		}
 	}
 
 	return $flags;
