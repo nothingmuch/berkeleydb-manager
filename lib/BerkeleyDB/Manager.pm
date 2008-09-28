@@ -641,6 +641,10 @@ transaction journals, etc.
 Whether C<DB_CREATE> is passed to C<Env> or C<instantiate_db> by default. Defaults to
 false.
 
+=item readonly
+
+Whether C<DB_RDONLY> is passed in the flags. Defaults to false.
+
 =item transactions
 
 Whether or not to enable transactions.
@@ -670,6 +674,34 @@ Enables multiversioning concurrency.
 
 See
 L<http://www.oracle.com/technology/documentation/berkeley-db/db/gsg_txn/C/isolation.html#snapshot_isolation>
+
+This will also automatically open all transactions with snapshot isolation.
+
+=item log_auto_remove
+
+Enables automatic removal of logs.
+
+Normally logs should be removed after being backed up, but if you are not
+interested in having full snapshot backups for catastrophic recovery scenarios,
+you can enable this.
+
+See L<http://www.oracle.com/technology/documentation/berkeley-db/db/ref/transapp/logfile.html>.
+
+Defaults to false.
+
+=item sync
+
+Enables syncing of BDB log writing.
+
+Defaults to true.
+
+If disabled, transaction writing will not be synced. This means that in the
+event of a crash some successfully comitted transactions might still be rolled
+back during recovery, but the database will still be in tact and atomicity is
+still guaranteed.
+
+This is useful for bulk imports as it can significantly increase performance of
+smaller transactions.
 
 =item dup
 
@@ -784,6 +816,8 @@ If C<$parent_txn> is provided the new transaction will be a child transaction.
 
 The new transaction is set as the active transaction for all registered
 database handles.
+
+If C<multiversion> is enabled C<DB_TXN_SNAPSHOT> is passed in as well.
 
 =item txn_commit $txn
 
