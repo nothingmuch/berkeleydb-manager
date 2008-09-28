@@ -199,7 +199,7 @@ sub instantiate_db {
 		( $txn   ? ( -Txn      => $txn   ) : () ),
 		( $flags ? ( -Flags    => $flags ) : () ),
 		( $props ? ( -Property => $props ) : () ),
-    ) || $BerkeleyDB::Error;
+    ) || die $BerkeleyDB::Error;
 }
 
 sub get_db {
