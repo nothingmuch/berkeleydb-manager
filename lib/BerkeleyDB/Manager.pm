@@ -11,6 +11,8 @@ use Data::Stream::Bulk::Util qw(nil);
 use Data::Stream::Bulk::Callback;
 use Data::Stream::Bulk::Array;
 
+use Path::Class;
+
 use namespace::clean -except => 'meta';
 
 our $VERSION = "0.05";
@@ -46,6 +48,21 @@ has [qw(
 has home => (
     is  => "ro",
 	predicate => "has_home",
+);
+
+has log_dir => (
+	is => "ro",
+	predicate => "has_log_dir",
+);
+
+has temp_dir => (
+	is => "ro",
+	predicate => "has_temp_dir",
+);
+
+has data_dir => (
+	is => "ro",
+	predicate => "has_data_dir",
 );
 
 has db_class => (
@@ -98,6 +115,22 @@ sub _build_env_flags {
 	return $flags;
 }
 
+has env_config => (
+	isa => "HashRef",
+	is  => "ro",
+	lazy_build => 1,
+);
+
+sub _build_env_config {
+	my $self = shift;
+
+	return {
+		( $self->has_log_dir  ? ( DB_LOG_DIR  => $self->log_dir  ) : () ),
+		( $self->has_data_dir ? ( DB_DATA_DIR => $self->data_dir ) : () ),
+		( $self->has_temp_dir ? ( DB_TEMP_DIR => $self->temp_dir ) : () ),
+	};
+}
+
 has env => (
     isa => "BerkeleyDB::Env",
     is  => "ro",
@@ -107,10 +140,26 @@ has env => (
 sub _build_env {
     my $self = shift;
 
-    BerkeleyDB::Env->new(
-        ( $self->has_home ? ( -Home => $self->home ) : () ),
-        -Flags => $self->env_flags,
-    ) || die $BerkeleyDB::Error;
+	if ( $self->create ) {
+		my $home = $self->has_home ? dir($self->home) : dir();
+
+		$home->mkpath unless -d $home;
+
+		foreach my $name ( "log_dir", "data_dir", "temp_dir" ) {
+			my $pred = "has_$name";
+			next unless $self->$pred;
+
+			my $dir = $home->subdir( $self->$name );
+
+			$dir->mkpath unless -d $dir;
+		}
+	}
+
+	BerkeleyDB::Env->new(
+		( $self->has_home ? ( -Home => $self->home ) : () ),
+		-Flags  => $self->env_flags,
+		-Config => $self->env_config,
+	) || die $BerkeleyDB::Error;
 }
 
 sub build_db_flags {

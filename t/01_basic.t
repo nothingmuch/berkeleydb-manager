@@ -7,6 +7,8 @@ use Test::More 'no_plan';
 use Test::Exception;
 use Test::TempDir qw(temp_root);
 
+use Path::Class;
+
 chdir temp_root(); # don't make a mess
 
 use ok "BerkeleyDB::Manager";
@@ -47,4 +49,24 @@ use ok "BerkeleyDB::Manager";
 	is_deeply( $m->open_dbs, { "foo.db" => $db }, "hash db closed" );
 }
 
+{
+	isa_ok(
+		my $m = BerkeleyDB::Manager->new(
+			home => "subdirs",
+			create => 1,
+			log_dir  => "logs",
+			data_dir => "data",
+		),
+		"BerkeleyDB::Manager"
+	);
+
+	isa_ok( $m->env, "BerkeleyDB::Env" );
+
+	my $db;
+	lives_ok { $db = $m->open_db( file => "stuff" ) } "open with log & data dirs";
+
+	isa_ok( $db, "BerkeleyDB::Btree" );
+
+	ok( -e file("subdirs", "data", "stuff"), "created under data dir" );
+}
 

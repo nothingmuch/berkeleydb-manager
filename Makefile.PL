@@ -18,6 +18,7 @@ WriteMakefile(
 		'namespace::clean' => '0.08',
 		'BerkeleyDB' => 0,
 		'Data::Stream::Bulk' => 0,
+		'Path::Class' => 0,
 	},
 );
 
