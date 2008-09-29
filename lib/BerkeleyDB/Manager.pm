@@ -45,6 +45,7 @@ has [qw(
 has [qw(
 	autocommit
 	transactions
+	snapshot
 	sync
 )] => (
 	isa => "Bool",
@@ -465,7 +466,7 @@ sub txn_do {
 sub txn_begin {
 	my ( $self, $parent_txn ) = @_;
 
-	my $txn = $self->env->TxnMgr->txn_begin($parent_txn || undef, $self->multiversion ? DB_TXN_SNAPSHOT : 0 ) || die $BerkeleyDB::Error;
+	my $txn = $self->env->TxnMgr->txn_begin($parent_txn || undef, $self->snapshot ? DB_TXN_SNAPSHOT : 0 ) || die $BerkeleyDB::Error;
 
 	$txn->Txn($self->all_open_dbs);
 
