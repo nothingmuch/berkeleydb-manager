@@ -8,3 +8,9 @@
 		- ->set adds on dup, sets on non
 		- ->exists convenience wrapper
 		- all check status and die on error (except get for !exists)
+- nosync
+- utilities
+	- hot backup
+	- cold backup (archive)
+	- recover
+	- compact
