@@ -35,6 +35,7 @@ has [qw(
 	recover
 	create
 	multiversion
+	read_uncomitted
 	readonly
 	log_auto_remove
 )] => (
@@ -235,6 +236,14 @@ sub build_db_flags {
 			$flags |= DB_MULTIVERSION;
 		} else {
 			$flags &= ~DB_MULTIVERSION;
+		}
+	}
+
+	if ( exists $args{read_uncomitted} ) {
+		if ( $args{read_uncomitted} ) {
+			$flags |= DB_READ_UNCOMMITTED;
+		} else {
+			$flags &= ~DB_READ_UNCOMMITTED;
 		}
 	}
 
