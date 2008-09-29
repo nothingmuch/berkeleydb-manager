@@ -715,7 +715,33 @@ Enables multiversioning concurrency.
 See
 L<http://www.oracle.com/technology/documentation/berkeley-db/db/gsg_txn/C/isolation.html#snapshot_isolation>
 
-This will also automatically open all transactions with snapshot isolation.
+=item snapshot
+
+Whether or not C<DB_TXN_SNAPSHOT> should be passed to C<txn_begin>.
+
+If C<multiversion> is not true, this is a noop.
+
+Defaults to true.
+
+Using C<DB_TXN_SNAPSHOT> means will cause copy on write multiversioning
+concurrency instead of locking concurrency.
+
+This can improve read responsiveness for applications with long running
+transactions, by allowing a page to be read even if it is being written to in
+another transaction since the writer is modifying its own copy of the page.
+
+This is an alternative to enabling reading of uncomitted data, and provides the
+same read performance while maintaining snapshot isolation at the cost of more
+memory.
+
+=item read_uncomitted
+
+Enables uncomitted reads.
+
+This breaks the I in ACID, since transactions are no longer isolated.
+
+A better approaach to increase read performance when there are long running
+writing transactions is to enable multiversioning.
 
 =item log_auto_remove
 
