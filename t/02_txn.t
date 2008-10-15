@@ -315,7 +315,8 @@ chdir temp_root(); # don't make a mess
 	}
 }
 
-{
+SKIP: {
+	skip "No MVCC support", 22 unless eval { BerkeleyDB::DB_TXN_SNAPSHOT; BerkeleyDB::DB_MULTIVERSION };
 	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1, multiversion => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
