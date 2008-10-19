@@ -8,6 +8,9 @@ use Test::TempDir;
 
 use ok 'BerkeleyDB::Manager';
 
+use lib "t/lib";
+use BerkeleyDB::Manager::Test;
+
 {
 	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root, create => 1 ), "BerkeleyDB::Manager" );
 
@@ -25,7 +28,7 @@ use ok 'BerkeleyDB::Manager';
 	$pri->db_put( "foo", "bar" );
 
 	my ( $pkey, $v );
-	ok( $sec->db_pget( "bar", $pkey, $v ) == 0, "get on secondary" );
+	sok( $sec->db_pget( "bar", $pkey, $v ), "get on secondary" );
 
 	is( $pkey, "foo", "pkey fetched" );
 	is( $v, "bar", "value" );

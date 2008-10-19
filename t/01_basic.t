@@ -15,6 +15,9 @@ use ok "BerkeleyDB::Manager";
 
 use BerkeleyDB; # DB_RDONLY
 
+use lib "t/lib";
+use BerkeleyDB::Manager::Test;
+
 {
 	isa_ok( my $m = BerkeleyDB::Manager->new( create => 1 ), "BerkeleyDB::Manager" );
 
@@ -27,9 +30,9 @@ use BerkeleyDB; # DB_RDONLY
 
 	is_deeply([ $m->all_open_dbs ], [ $db ], "open DBs" );
 
-	ok( $db->db_put( foo => 3 ) == 0, "status of db_put" );
+	sok( $db->db_put( foo => 3 ), "status of db_put" );
 
-	ok( $db->db_get("foo", my $v) == 0, "status of db_get" );
+	sok( $db->db_get("foo", my $v), "status of db_get" );
 	is( $v, 3, "value" );
 }
 
@@ -50,7 +53,7 @@ use BerkeleyDB; # DB_RDONLY
 
 	ok( $db->db_put("foo", "bar") != 0, "db put on readonly is error" );
 
-	ok( $db->db_get("foo", my $value) == 0, "db_get" );
+	sok( $db->db_get("foo", my $value), "db_get" );
 	is( $value, 3, "got value" );
 }
 
@@ -71,7 +74,7 @@ use BerkeleyDB; # DB_RDONLY
 
 	ok( $db->db_put("foo", "bar") != 0, "db put on readonly is error" );
 
-	ok( $db->db_get("foo", my $value) == 0, "db_get" );
+	sok( $db->db_get("foo", my $value), "db_get" );
 	is( $value, 3, "got value" );
 }
 
@@ -92,9 +95,9 @@ use BerkeleyDB; # DB_RDONLY
 
 	isa_ok( $db, "BerkeleyDB::Btree" );
 
-	ok( $db->db_put("foo", "bar") == 0, "db put is not an error (readonly overridden)" );
+	sok( $db->db_put("foo", "bar"), "db put is not an error (readonly overridden)" );
 
-	ok( $db->db_get("foo", my $value) == 0, "db_get" );
+	sok( $db->db_get("foo", my $value), "db_get" );
 	is( $value, "bar", "got value" );
 }
 

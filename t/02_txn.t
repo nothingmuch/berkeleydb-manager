@@ -9,6 +9,9 @@ use Test::TempDir;
 
 use ok "BerkeleyDB::Manager";
 
+use lib "t/lib";
+use BerkeleyDB::Manager::Test;
+
 chdir temp_root(); # don't make a mess
 
 {
@@ -30,9 +33,9 @@ chdir temp_root(); # don't make a mess
 			sub {
 				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				sok( $db->db_put("foo", "bar"), "no error in put" );
 
-				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				sok( $db->db_get("foo", $v), "no error in get" );
 				is( $v, "bar", "'foo' key" );
 
 				die "error";
@@ -57,9 +60,9 @@ chdir temp_root(); # don't make a mess
 			sub {
 				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				sok( $db->db_put("foo", "bar"), "no error in put" );
 
-				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				sok( $db->db_get("foo", $v), "no error in get" );
 				is( $v, "bar", "'foo' key" );
 			},
 			rollback => sub { $rollback++ },
@@ -71,7 +74,7 @@ chdir temp_root(); # don't make a mess
 	ok( $commit, "commit trigger called" );
 
 	{
-		ok( $db->db_get("foo", my $v) == 0, "no error in get (transaction comitted)" );
+		sok( $db->db_get("foo", my $v), "no error in get (transaction comitted)" );
 		is( $v, "bar", "'foo' key" );
 	}
 }
@@ -87,8 +90,8 @@ chdir temp_root(); # don't make a mess
 
 	throws_ok {
 		$m->txn_do(sub {
-			ok( $first->db_put("foo", "bar") == 0, "no error in put" );
-			ok( $second->db_put("gorch", "zot") == 0, "no error in put" );
+			sok( $first->db_put("foo", "bar"), "no error in put" );
+			sok( $second->db_put("gorch", "zot"), "no error in put" );
 
 			die "error";
 		});
@@ -102,16 +105,16 @@ chdir temp_root(); # don't make a mess
 
 	lives_ok {
 		$m->txn_do(sub {
-			ok( $first->db_put("foo", "bar") == 0, "no error in put" );
-			ok( $second->db_put("gorch", "zot") == 0, "no error in put" );
+			sok( $first->db_put("foo", "bar"), "no error in put" );
+			sok( $second->db_put("gorch", "zot"), "no error in put" );
 		});
 	} "no error in txn";
 
 	{
-		ok( $first->db_get("foo", my $v) == 0, "get succeeded (transaction comitted)" );
+		sok( $first->db_get("foo", my $v), "get succeeded (transaction comitted)" );
 		is( $v, "bar", "'foo' key" );
 
-		ok( $second->db_get("gorch", $v) == 0, "get succeeded in second db" );
+		sok( $second->db_get("gorch", $v), "get succeeded in second db" );
 		is( $v, "zot", "'gorch' key" );
 	}
 }
@@ -132,14 +135,14 @@ chdir temp_root(); # don't make a mess
 		$m->txn_do(sub {
 			ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-			ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+			sok( $db->db_put("foo", "bar"), "no error in put" );
 
 			$m->txn_do(sub {
 				ok( $db->db_get("gorch", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("gorch", "bar") == 0, "no error in put" );
+				sok( $db->db_put("gorch", "bar"), "no error in put" );
 
-				ok( $db->db_get("gorch", $v) == 0, "no error in get" );
+				sok( $db->db_get("gorch", $v), "no error in get" );
 				is( $v, "bar", "'gorch' key" );
 
 				die "error";
@@ -158,14 +161,14 @@ chdir temp_root(); # don't make a mess
 		$m->txn_do(sub {
 			ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-			ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+			sok( $db->db_put("foo", "bar"), "no error in put" );
 
 			$m->txn_do(sub {
 				ok( $db->db_get("gorch", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("gorch", "bar") == 0, "no error in put" );
+				sok( $db->db_put("gorch", "bar"), "no error in put" );
 
-				ok( $db->db_get("gorch", $v) == 0, "no error in get" );
+				sok( $db->db_get("gorch", $v), "no error in get" );
 				is( $v, "bar", "'gorch' key" );
 			});
 
@@ -183,24 +186,24 @@ chdir temp_root(); # don't make a mess
 		$m->txn_do(sub {
 			ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-			ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+			sok( $db->db_put("foo", "bar"), "no error in put" );
 
 			$m->txn_do(sub {
 				ok( $db->db_get("gorch", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("gorch", "bar") == 0, "no error in put" );
+				sok( $db->db_put("gorch", "bar"), "no error in put" );
 
-				ok( $db->db_get("gorch", $v) == 0, "no error in get" );
+				sok( $db->db_get("gorch", $v), "no error in get" );
 				is( $v, "bar", "'gorch' key" );
 			});
 		});
 	} "no error in txn";
 
 	{
-		ok( $db->db_get("foo", my $v) == 0, "no error in get (transaction comitted)" );
+		sok( $db->db_get("foo", my $v), "no error in get (transaction comitted)" );
 		is( $v, "bar", "'foo' key" );
 
-		ok( $db->db_get("gorch", $v) == 0, "no error in get (transaction comitted)" );
+		sok( $db->db_get("gorch", $v), "no error in get (transaction comitted)" );
 		is( $v, "bar", "'foo' key" );
 	}
 
@@ -209,15 +212,15 @@ chdir temp_root(); # don't make a mess
 
 			ok( $db->db_get("dancing", my $v) != 0, "get failed" );
 
-			ok( $db->db_put("dancing", "bar") == 0, "no error in put" );
+			sok( $db->db_put("dancing", "bar"), "no error in put" );
 
 			ok( my $ctxn = $m->txn_begin($txn), "child transaction" );
 
 				ok( $db->db_get("oi", $v) != 0, "get failed" );
 
-				ok( $db->db_put("oi", "bar") == 0, "no error in put" );
+				sok( $db->db_put("oi", "bar"), "no error in put" );
 
-				ok( $db->db_get("oi", $v) == 0, "no error in get" );
+				sok( $db->db_get("oi", $v), "no error in get" );
 				is( $v, "bar", "'oi' key" );
 
 			ok( $m->txn_rollback($ctxn), "rollback" );
@@ -225,16 +228,16 @@ chdir temp_root(); # don't make a mess
 
 			ok( $db->db_get("oi", $v) != 0, "get failed (rolled back)" );
 
-			ok( $db->db_get("dancing", $v) == 0, "no error in get" );
+			sok( $db->db_get("dancing", $v), "no error in get" );
 			is( $v, "bar", "'dancing' key (only nested txn rolled back)" );
 
 			ok( $ctxn = $m->txn_begin($txn), "child transaction" );
 
 				ok( $db->db_get("oi", $v) != 0, "get failed" );
 
-				ok( $db->db_put("oi", "hippies") == 0, "no error in put" );
+				sok( $db->db_put("oi", "hippies"), "no error in put" );
 
-				ok( $db->db_get("oi", $v) == 0, "no error in get" );
+				sok( $db->db_get("oi", $v), "no error in get" );
 				is( $v, "hippies", "'oi' key" );
 
 			ok( $m->txn_commit($ctxn), "commit" );
@@ -242,10 +245,10 @@ chdir temp_root(); # don't make a mess
 		ok( $m->txn_commit($txn), "commit" );
 
 
-		ok( $db->db_get("dancing", $v) == 0, "no error in get" );
+		sok( $db->db_get("dancing", $v), "no error in get" );
 		is( $v, "bar", "'dancing' key" );
 
-		ok( $db->db_get("oi", $v) == 0, "no error in get" );
+		sok( $db->db_get("oi", $v), "no error in get" );
 		is( $v, "hippies", "'oi' key" );
 	}
 }
@@ -263,9 +266,9 @@ chdir temp_root(); # don't make a mess
 
 	throws_ok { $m->txn_begin } qr/transaction.*not enabled/i, "can't begin transaction if transactions are disabled";
 
-	ok( $db->db_put("bollocks", "moose") == 0, "db_put outside of txn" );
+	sok( $db->db_put("bollocks", "moose"), "db_put outside of txn" );
 
-	ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+	sok( $db->db_get("bollocks", my $v), "get ok" );
 	is( $v, "moose", "value" );
 }
 
@@ -282,9 +285,9 @@ chdir temp_root(); # don't make a mess
 
 		is_deeply([ $m->all_open_dbs ], [ $db ], "open DBs" );
 
-		ok( $db->db_put("bollocks", "moose") == 0, "db_put outside of txn" );
+		sok( $db->db_put("bollocks", "moose"), "db_put outside of txn" );
 
-		ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+		sok( $db->db_get("bollocks", my $v), "get ok" );
 		is( $v, "moose", "value" );
 	});
 
@@ -293,7 +296,7 @@ chdir temp_root(); # don't make a mess
 	$m->txn_do(sub {
 		ok( my $db = $m->open_db("nice.db"), "reopen" );
 
-		ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+		sok( $db->db_get("bollocks", my $v), "get ok" );
 		is( $v, "moose", "value" );
 	});
 
@@ -306,9 +309,9 @@ chdir temp_root(); # don't make a mess
 			ok( $db->db_put("bollocks", "orchid") != 0, "error in db_put with autocommit off, inside txn that was not opened in txn" );
 		});
 
-		ok( $db->db_put("bollocks", "elk") == 0, "no error (no txn) db_put with autocommit off" );
+		sok( $db->db_put("bollocks", "elk"), "no error (no txn) db_put with autocommit off" );
 
-		ok( $db->db_get("bollocks", my $v) == 0, "get ok" );
+		sok( $db->db_get("bollocks", my $v), "get ok" );
 		is( $v, "elk", "new value" );
 
 		$m->close_db("nice.db");
@@ -335,9 +338,9 @@ SKIP: {
 			sub {
 				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				sok( $db->db_put("foo", "bar"), "no error in put" );
 
-				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				sok( $db->db_get("foo", $v), "no error in get" );
 				is( $v, "bar", "'foo' key" );
 
 				die "error";
@@ -362,9 +365,9 @@ SKIP: {
 			sub {
 				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				sok( $db->db_put("foo", "bar"), "no error in put" );
 
-				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				sok( $db->db_get("foo", $v), "no error in get" );
 				is( $v, "bar", "'foo' key" );
 			},
 			rollback => sub { $rollback++ },
@@ -376,7 +379,7 @@ SKIP: {
 	ok( $commit, "commit trigger called" );
 
 	{
-		ok( $db->db_get("foo", my $v) == 0, "no error in get (transaction comitted)" );
+		sok( $db->db_get("foo", my $v), "no error in get (transaction comitted)" );
 		is( $v, "bar", "'foo' key" );
 	}
 }
@@ -400,9 +403,9 @@ SKIP: {
 			sub {
 				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				sok( $db->db_put("foo", "bar"), "no error in put" );
 
-				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				sok( $db->db_get("foo", $v), "no error in get" );
 				is( $v, "bar", "'foo' key" );
 
 				die "error";
@@ -427,9 +430,9 @@ SKIP: {
 			sub {
 				ok( $db->db_get("foo", my $v) != 0, "get failed" );
 
-				ok( $db->db_put("foo", "bar") == 0, "no error in put" );
+				sok( $db->db_put("foo", "bar"), "no error in put" );
 
-				ok( $db->db_get("foo", $v) == 0, "no error in get" );
+				sok( $db->db_get("foo", $v), "no error in get" );
 				is( $v, "bar", "'foo' key" );
 			},
 			rollback => sub { $rollback++ },
@@ -441,7 +444,7 @@ SKIP: {
 	ok( $commit, "commit trigger called" );
 
 	{
-		ok( $db->db_get("foo", my $v) == 0, "no error in get (transaction comitted)" );
+		sok( $db->db_get("foo", my $v), "no error in get (transaction comitted)" );
 		is( $v, "bar", "'foo' key" );
 	}
 }

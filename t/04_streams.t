@@ -11,6 +11,9 @@ use BerkeleyDB qw(DB_NEXT);
 
 use ok 'BerkeleyDB::Manager';
 
+use lib "t/lib";
+use BerkeleyDB::Manager::Test;
+
 {
 	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root(), create => 1 ), "BerkeleyDB::Manager" );
 
