@@ -17,7 +17,7 @@ use Moose::Util::TypeConstraints;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = "0.07";
+our $VERSION = "0.08";
 
 coerce( __PACKAGE__,
 	from HashRef => via { __PACKAGE__->new(%$_) },
