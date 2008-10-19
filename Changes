@@ -1,3 +1,7 @@
+0.08
+	- In the test suite, report $BereleyDB::Error whenever a status assertion
+	  fails.
+
 0.07
 	- Only evaluate DB_TXN_SNAPSHOT when it will actually be meaningful to
 	  avoid errors on BDB versions that don't support it 
