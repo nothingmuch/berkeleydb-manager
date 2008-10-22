@@ -15,6 +15,8 @@ use ok "BerkeleyDB::Manager";
 
 use BerkeleyDB; # DB_RDONLY
 
+diag "BerkeleyDB $BerkeleyDB::VERSION, DB $BerkeleyDB::db_version";
+
 use lib "t/lib";
 use BerkeleyDB::Manager::Test;
 
