@@ -16,7 +16,7 @@ WriteMakefile(
 		'Test::Exception' => 0,
 		'Moose' => 0,
 		'namespace::clean' => '0.08',
-		'BerkeleyDB' => 0,
+		'BerkeleyDB' => '0.36',
 		'Data::Stream::Bulk' => 0,
 		'Path::Class' => 0,
 	},
