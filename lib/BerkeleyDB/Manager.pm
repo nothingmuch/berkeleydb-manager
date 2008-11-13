@@ -149,6 +149,8 @@ has env => (
 sub _build_env {
     my $self = shift;
 
+	my $flags = $self->env_flags;
+
 	if ( $self->create ) {
 		my $home = $self->has_home ? dir($self->home) : dir();
 
@@ -162,11 +164,32 @@ sub _build_env {
 
 			$dir->mkpath unless -d $dir;
 		}
+
+		my @config;
+
+		push @config, "set_lg_dir " . $self->log_dir if $self->has_log_dir;
+		push @config, "set_data_dir " . $self->data_dir if $self->has_data_dir;
+		push @config, "set_tmp_dir " . $self->temp_dir if $self->has_temp_dir;
+		push @config, "db_log_autoremove" if $self->log_auto_remove;
+
+		if ( $flags & DB_MULTIVERSION ) {
+			push @config, "db_multiversion";
+		}
+
+		if ( @config ) {
+			my $config = $home->file("DB_CONFIG");
+
+			unless ( -e $config ) {
+				my $fh = $config->openw;
+				$fh->print("set_lg_dir " . $self->log_dir . "\n") if $self->has_log_dir; # set_lg_dir is not a typo
+				$fh->print("set_data_dir " . $self->data_dir . "\n") if $self->has_data_dir;
+			}
+		}
 	}
 
 	my $env = BerkeleyDB::Env->new(
 		( $self->has_home ? ( -Home => $self->home ) : () ),
-		-Flags  => $self->env_flags,
+		-Flags  => $flags,
 		-Config => $self->env_config,
 	) || die $BerkeleyDB::Error;
 
