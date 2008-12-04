@@ -14,7 +14,7 @@ our @EXPORT = qw(sok);
 
 sub sok ($;$) {
 	local $Test::Builder::Level = $Test::Builder::Level + 1;
-	ok( $_[0] == 0, ( @_ > 1 ? $_[1] : () ) ) || diag("$BerkeleyDB::Error");
+	ok( $_[0] == 0, ( @_ > 1 ? $_[1] : () ) ) || diag("$BerkeleyDB::Error (status == $_[0])");
 }
 
 __PACKAGE__
