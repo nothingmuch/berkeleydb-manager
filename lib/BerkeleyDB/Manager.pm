@@ -34,6 +34,7 @@ has [qw(
 	dupsort
 	recover
 	create
+	truncate
 	multiversion
 	read_uncomitted
 	readonly
@@ -216,7 +217,7 @@ sub build_db_flags {
 	if ( $self->has_db_flags ) {
 		$flags = $self->db_flags;
 	} else {
-		foreach my $opt ( qw(create readonly) ) {
+		foreach my $opt ( qw(create readonly truncate) ) {
 			$args{$opt} = $self->$opt unless exists $args{$opt};
 		}
 
@@ -243,6 +244,14 @@ sub build_db_flags {
 			$flags |= DB_CREATE;
 		} else { 
 			$flags &= ~DB_CREATE;
+		}
+	}
+
+	if ( exists $args{truncate} ) {
+		if ( $args{truncate} ) {
+			$flags |= DB_TRUNCATE;
+		} else {
+			$flags &= ~DB_TRUNCATE;
 		}
 	}
 
