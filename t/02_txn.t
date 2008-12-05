@@ -3,14 +3,14 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use lib "t/lib";
+use BerkeleyDB::Manager::Test 4.4, 'no_plan';
+
+use Test::More;
 use Test::Exception;
 use Test::TempDir;
 
 use ok "BerkeleyDB::Manager";
-
-use lib "t/lib";
-use BerkeleyDB::Manager::Test;
 
 chdir temp_root(); # don't make a mess
 
