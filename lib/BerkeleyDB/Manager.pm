@@ -242,7 +242,7 @@ sub build_db_flags {
 	if ( exists $args{create} ) {
 		if ( $args{create} ) {
 			$flags |= DB_CREATE;
-		} else { 
+		} else {
 			$flags &= ~DB_CREATE;
 		}
 	}
