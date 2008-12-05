@@ -387,6 +387,8 @@ sub all_open_dbs {
 sub associate {
 	my ( $self, %args ) = @_;
 
+	$self->assert_version(4.6, "associate");
+
 	my ( $primary, $secondary, $callback ) = @args{qw(primary secondary callback)};
 
 	foreach my $db ( $primary, $secondary ) {
