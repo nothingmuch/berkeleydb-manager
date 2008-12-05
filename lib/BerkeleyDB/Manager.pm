@@ -195,11 +195,8 @@ sub _build_env {
 	) || die $BerkeleyDB::Error;
 
 	if ( $self->log_auto_remove ) {
-		if ( $env->can("log_set_config") ) {
-			$env->log_set_config( DB_LOG_AUTO_REMOVE, 1 );
-		} else {
-			croak "log_auto_remove specified but the log_set_config method is not available in this version of BerkeleyDB";
-		}
+		$self->assert_version( 4.7, "log_auto_remove" );
+		$env->log_set_config( DB_LOG_AUTO_REMOVE, 1 );
 	}
 
 	return $env;
