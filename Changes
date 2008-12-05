@@ -1,3 +1,7 @@
+0.09
+	- Add version detection logic
+	- Better diagnostics in test suite
+
 0.08
 	- In the test suite, report $BereleyDB::Error whenever a status assertion
 	  fails.
