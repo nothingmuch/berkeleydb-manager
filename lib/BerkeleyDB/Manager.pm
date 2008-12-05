@@ -660,6 +660,19 @@ sub cursor_stream {
 	);
 }
 
+sub assert_version {
+	my ( $self, $version, $feature ) = @_;
+
+	unless ( $self->have_version($version) ) {
+		croak "$feature requires DB $version, but we only have $BerkeleyDB::db_version";
+	}
+}
+
+sub have_version {
+	my ( $self, $version ) = @_;
+	$BerkeleyDB::db_version >= $version;
+}
+
 __PACKAGE__->meta->make_immutable;
 
 __PACKAGE__
