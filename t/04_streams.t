@@ -3,16 +3,16 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use lib "t/lib";
+use BerkeleyDB::Manager::Test 3.1, "no_plan";
+
+use Test::More;
 use Test::Moose;
 use Test::TempDir;
 
 use BerkeleyDB qw(DB_NEXT);
 
 use ok 'BerkeleyDB::Manager';
-
-use lib "t/lib";
-use BerkeleyDB::Manager::Test;
 
 {
 	isa_ok( my $m = BerkeleyDB::Manager->new( home => temp_root(), create => 1 ), "BerkeleyDB::Manager" );
