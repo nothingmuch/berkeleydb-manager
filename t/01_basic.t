@@ -3,7 +3,10 @@
 use strict;
 use warnings;
 
-use Test::More 'no_plan';
+use lib "t/lib";
+use BerkeleyDB::Manager::Test 4.4, 'no_plan';
+
+use Test::More;
 use Test::Exception;
 use Test::TempDir qw(temp_root);
 
@@ -16,9 +19,6 @@ use ok "BerkeleyDB::Manager";
 use BerkeleyDB; # DB_RDONLY
 
 diag "BerkeleyDB $BerkeleyDB::VERSION, DB $BerkeleyDB::db_version";
-
-use lib "t/lib";
-use BerkeleyDB::Manager::Test;
 
 {
 	isa_ok( my $m = BerkeleyDB::Manager->new( create => 1 ), "BerkeleyDB::Manager" );
