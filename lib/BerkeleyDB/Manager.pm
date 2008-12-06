@@ -19,6 +19,8 @@ use namespace::clean -except => 'meta';
 
 our $VERSION = "0.09";
 
+use constant HAVE_DB_MULTIVERSION => do { local $@; eval { DB_MULTIVERSION; 1 } };
+
 coerce( __PACKAGE__,
 	from HashRef => via { __PACKAGE__->new(%$_) },
 );
@@ -173,8 +175,10 @@ sub _build_env {
 		push @config, "set_tmp_dir " . $self->temp_dir if $self->has_temp_dir;
 		push @config, "db_log_autoremove" if $self->log_auto_remove;
 
-		if ( $flags & DB_MULTIVERSION ) {
-			push @config, "db_multiversion";
+		if ( HAVE_DB_MULTIVERSION ) {
+			if ( $flags & DB_MULTIVERSION ) {
+				push @config, "db_multiversion";
+			}
 		}
 
 		if ( @config ) {
@@ -262,9 +266,11 @@ sub build_db_flags {
 
 	if ( exists $args{multiversion} ) {
 		if ( $args{multiversion} ) {
-			$flags |= DB_MULTIVERSION;
+			$flags |= DB_MULTIVERSION; # it will die on its own
 		} else {
-			$flags &= ~DB_MULTIVERSION;
+			if ( HAVE_DB_MULTIVERSION ) {
+				$flags &= ~DB_MULTIVERSION;
+			}
 		}
 	}
 
