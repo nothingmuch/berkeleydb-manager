@@ -1,3 +1,6 @@
+0.10
+	- Try to not die if DB_MULTIVERSION isn't defined and the user is not trying to use it
+
 0.09
 	- Add version detection logic
 	- Better diagnostics in test suite
