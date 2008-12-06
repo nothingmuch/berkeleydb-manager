@@ -12,10 +12,8 @@ use Test::TempDir;
 
 use ok "BerkeleyDB::Manager";
 
-chdir temp_root(); # don't make a mess
-
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => tempdir, create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -80,7 +78,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => tempdir, create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -120,7 +118,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => tempdir, create => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -254,7 +252,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", transactions => 0, create => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => tempdir, transactions => 0, create => 1 ), "BerkeleyDB::Manager" );
 
 	ok( !$m->transactions, "no txns" );
 
@@ -273,7 +271,7 @@ chdir temp_root(); # don't make a mess
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", autocommit => 0, create => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => tempdir, autocommit => 0, create => 1 ), "BerkeleyDB::Manager" );
 
 	ok( $m->transactions, "txns enabled" );
 	ok( !$m->autocommit, "autocommit disabled" );
@@ -320,7 +318,7 @@ chdir temp_root(); # don't make a mess
 
 SKIP: {
 	skip "No MVCC support", 22 unless eval { BerkeleyDB::DB_TXN_SNAPSHOT; BerkeleyDB::DB_MULTIVERSION };
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1, multiversion => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => tempdir, create => 1, multiversion => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -385,7 +383,7 @@ SKIP: {
 }
 
 {
-	isa_ok( my $m = BerkeleyDB::Manager->new( home => ".", create => 1, read_uncomitted => 1 ), "BerkeleyDB::Manager" );
+	isa_ok( my $m = BerkeleyDB::Manager->new( home => tempdir, create => 1, read_uncomitted => 1 ), "BerkeleyDB::Manager" );
 
 	isa_ok( $m->env, "BerkeleyDB::Env" );
 
@@ -448,3 +446,4 @@ SKIP: {
 		is( $v, "bar", "'foo' key" );
 	}
 }
+

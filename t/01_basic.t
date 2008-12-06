@@ -12,6 +12,7 @@ use Test::TempDir qw(temp_root);
 
 use Path::Class;
 
+my $cwd = dir()->absolute;
 chdir temp_root(); # don't make a mess
 
 use ok "BerkeleyDB::Manager";
@@ -147,3 +148,4 @@ diag "BerkeleyDB $BerkeleyDB::VERSION, DB $BerkeleyDB::db_version";
 	ok( -e file("subdirs", "data", "stuff"), "created under data dir" );
 }
 
+chdir $cwd;
