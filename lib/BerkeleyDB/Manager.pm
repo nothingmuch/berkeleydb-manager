@@ -41,6 +41,8 @@ has [qw(
 	read_uncomitted
 	readonly
 	log_auto_remove
+	lock
+	replication
 )] => (
 	isa => "Bool",
 	is  => "ro",
@@ -51,6 +53,7 @@ has [qw(
 	transactions
 	snapshot
 	sync
+	log
 )] => (
 	isa => "Bool",
 	is  => "ro",
@@ -111,6 +114,18 @@ sub _build_env_flags {
 	my $self = shift;
 
 	my $flags = DB_INIT_MPOOL;
+
+	if ( $self->log ) {
+		$flags |= DB_INIT_LOG;
+	}
+
+	if ( $self->lock ) {
+		$flags |= DB_INIT_LOCK;
+	}
+
+	if ( $self->replication ) {
+		$flags |= DB_INIT_REP;
+	}
 
 	if ( $self->transactions ) {
 		$flags |= DB_INIT_TXN;
