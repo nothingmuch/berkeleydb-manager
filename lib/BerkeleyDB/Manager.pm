@@ -190,26 +190,20 @@ sub _build_env {
 			$dir->mkpath unless -d $dir;
 		}
 
-		my @config;
+		if ( $self->has_home ) {
+			my @config;
 
-		push @config, "set_lg_dir " . $self->log_dir if $self->has_log_dir;
-		push @config, "set_data_dir " . $self->data_dir if $self->has_data_dir;
-		push @config, "set_tmp_dir " . $self->temp_dir if $self->has_temp_dir;
-		push @config, "db_log_autoremove" if $self->log_auto_remove;
+			push @config, "set_lg_dir " . $self->log_dir if $self->has_log_dir;
+			push @config, "set_data_dir " . $self->data_dir if $self->has_data_dir;
+			push @config, "set_tmp_dir " . $self->temp_dir if $self->has_temp_dir;
 
-		if ( HAVE_DB_MULTIVERSION ) {
-			if ( $flags & DB_MULTIVERSION ) {
-				push @config, "db_multiversion";
-			}
-		}
+			if ( @config ) {
+				my $config = $home->file("DB_CONFIG");
 
-		if ( @config ) {
-			my $config = $home->file("DB_CONFIG");
-
-			unless ( -e $config ) {
-				my $fh = $config->openw;
-				$fh->print("set_lg_dir " . $self->log_dir . "\n") if $self->has_log_dir; # set_lg_dir is not a typo
-				$fh->print("set_data_dir " . $self->data_dir . "\n") if $self->has_data_dir;
+				unless ( -e $config ) {
+					my $fh = $config->openw;
+					$fh->print(join "\n", @config, "");
+				}
 			}
 		}
 	}
@@ -768,6 +762,13 @@ transaction journals, etc.
 
 Whether C<DB_CREATE> is passed to C<Env> or C<instantiate_db> by default. Defaults to
 false.
+
+If create and specified and an alternate log, data or tmp dir is set, a
+C<DB_CONFIG> configuration file with those parameters will be written allowing
+standard Berkeley DB tools to work with the environment home directory.
+
+An existing C<DB_CONFIG> file will not be overwritten, nor will one be written
+in the current directory if C<home> is not specified.
 
 =item lock
 
