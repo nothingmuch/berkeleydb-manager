@@ -212,7 +212,7 @@ use ok "BerkeleyDB::Manager";
 
 			sok( $db->db_put("dancing", "bar"), "no error in put" );
 
-			ok( my $ctxn = $m->txn_begin($txn), "child transaction" );
+			ok( my $ctxn = $m->txn_begin, "child transaction" );
 
 				ok( $db->db_get("oi", $v) != 0, "get failed" );
 
@@ -221,7 +221,7 @@ use ok "BerkeleyDB::Manager";
 				sok( $db->db_get("oi", $v), "no error in get" );
 				is( $v, "bar", "'oi' key" );
 
-			ok( $m->txn_rollback($ctxn), "rollback" );
+			ok( $m->txn_rollback, "rollback" );
 			undef $ctxn;
 
 			ok( $db->db_get("oi", $v) != 0, "get failed (rolled back)" );
@@ -229,7 +229,7 @@ use ok "BerkeleyDB::Manager";
 			sok( $db->db_get("dancing", $v), "no error in get" );
 			is( $v, "bar", "'dancing' key (only nested txn rolled back)" );
 
-			ok( $ctxn = $m->txn_begin($txn), "child transaction" );
+			ok( $ctxn = $m->txn_begin, "child transaction" );
 
 				ok( $db->db_get("oi", $v) != 0, "get failed" );
 
@@ -238,9 +238,9 @@ use ok "BerkeleyDB::Manager";
 				sok( $db->db_get("oi", $v), "no error in get" );
 				is( $v, "hippies", "'oi' key" );
 
-			ok( $m->txn_commit($ctxn), "commit" );
+			ok( $m->txn_commit, "commit" );
 
-		ok( $m->txn_commit($txn), "commit" );
+		ok( $m->txn_commit, "commit" );
 
 
 		sok( $db->db_get("dancing", $v), "no error in get" );

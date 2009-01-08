@@ -445,20 +445,25 @@ sub _current_transaction {
 		return $frame->[0];
 	}
 
-	return;
+	return undef;
 }
 
 sub _push_transaction {
 	my ( $self, $txn ) = @_;
+	$self->_activate_txn($txn);
 	push @{ $self->_transaction_stack }, [ $txn ];
 }
 
 sub _pop_transaction {
-	my ( $self ) = @_;
+	my $self = shift;
 
 	if ( my $d = pop @{ $self->_transaction_stack } ) {
 		shift @$d;
 		$self->close_db($_) for @$d;
+
+		if ( my $txn = $self->_current_transaction ) {
+			$self->_activate_txn($txn);
+		}
 	} else {
 		croak "Transaction stack underflowed";
 	}
@@ -473,9 +478,7 @@ sub txn_do {
 
 	ref $coderef eq 'CODE' or croak '$coderef must be a CODE reference';
 
-	my $txn = $self->txn_begin( $self->_current_transaction );
-
-	$self->_push_transaction($txn);
+	$self->txn_begin;
 
 	my @result;
 
@@ -494,7 +497,7 @@ sub txn_do {
 			}
 
 			$commit && $commit->();
-			$self->txn_commit($txn);
+			$self->txn_commit;
 
 			1;
 		};
@@ -503,18 +506,13 @@ sub txn_do {
 	};
 
 	if ( $success ) {
-		undef $txn;
-		$self->_pop_transaction;
 		return wantarray ? @result : $result[0];
 	} else {
 		my $rollback_exception = do {
 			local $@;
-			eval { $self->txn_rollback($txn); $rollback && $rollback->() };
+			eval { $self->txn_rollback; $rollback && $rollback->() };
 			$@;
 		};
-
-		undef $txn;
-		$self->_pop_transaction;
 
 		if ($rollback_exception) {
 			croak "Transaction aborted: $err, rollback failed: $rollback_exception";
@@ -524,32 +522,49 @@ sub txn_do {
 	}
 }
 
-sub txn_begin {
-	my ( $self, $parent_txn ) = @_;
-
-	my $txn = $self->env->TxnMgr->txn_begin($parent_txn || undef, $self->multiversion && $self->snapshot ? DB_TXN_SNAPSHOT : 0 ) || die $BerkeleyDB::Error;
+sub _activate_txn {
+	my ( $self, $txn ) = @_;
 
 	$txn->Txn($self->all_open_dbs);
+}
+
+sub txn_begin {
+	my $self = shift;
+
+	my $txn = $self->env->txn_begin(
+		$self->_current_transaction || undef,
+		$self->multiversion && $self->snapshot ? DB_TXN_SNAPSHOT : 0,
+	) || die $BerkeleyDB::Error;
+
+	$self->_push_transaction($txn);
 
 	return $txn;
 }
 
 sub txn_commit {
-	my ( $self, $txn ) = @_;
+	my $self = shift;
+
+	my $txn = $self->_current_transaction;
 
 	unless ( $txn->txn_commit == 0 ) {
 		die $BerkeleyDB::Error;
 	}
 
+	$self->_pop_transaction;
+
 	return 1;
 }
 
 sub txn_rollback {
-	my ( $self, $txn ) = @_;
+	my $self = shift;
+
+	my $txn = $self->_current_transaction;
 
 	unless ( $txn->txn_abort == 0 ) {
 		die $BerkeleyDB::Error;
 	}
+
+	$self->_pop_transaction;
 
 	return 1;
 }
@@ -939,26 +954,24 @@ transaction was successful, or C<txn_rollback> if it wasn't.
 
 Transactions are kept on a stack internally.
 
-=item txn_begin $parent_txn
+=item txn_begin
 
 Begin a new transaction.
-
-If C<$parent_txn> is provided the new transaction will be a child transaction.
 
 The new transaction is set as the active transaction for all registered
 database handles.
 
 If C<multiversion> is enabled C<DB_TXN_SNAPSHOT> is passed in as well.
 
-=item txn_commit $txn
+=item txn_commit
 
-Commit a transaction.
+Commit the currnet transaction.
 
 Will die on error.
 
-=item txn_rollback $txn
+=item txn_rollback
 
-Rollback a transaction.
+Rollback the current transaction.
 
 =item associate %args
 
