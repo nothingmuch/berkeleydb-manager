@@ -41,7 +41,6 @@ has [qw(
 	read_uncomitted
 	readonly
 	log_auto_remove
-	lock
 	replication
 )] => (
 	isa => "Bool",
@@ -52,6 +51,7 @@ has [qw(
 	autocommit
 	transactions
 	snapshot
+	lock
 	sync
 	log
 )] => (
