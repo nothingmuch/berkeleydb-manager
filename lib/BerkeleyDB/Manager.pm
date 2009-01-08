@@ -52,12 +52,19 @@ has [qw(
 	transactions
 	snapshot
 	lock
+	deadlock_detection
 	sync
 	log
 )] => (
 	isa => "Bool",
 	is  => "ro",
 	default => 1,
+);
+
+has lk_detect => (
+	isa => "Int",
+	is  => "ro",
+	default => sub { DB_LOCK_DEFAULT },
 );
 
 has home => (
@@ -209,6 +216,7 @@ sub _build_env {
 
 	my $env = BerkeleyDB::Env->new(
 		( $self->has_home ? ( -Home => $self->home ) : () ),
+		( $self->deadlock_detection ? ( -LockDetect => $self->lk_detect ) : () ),
 		-Flags  => $flags,
 		-Config => $self->env_config,
 	) || die $BerkeleyDB::Error;
@@ -760,6 +768,23 @@ transaction journals, etc.
 
 Whether C<DB_CREATE> is passed to C<Env> or C<instantiate_db> by default. Defaults to
 false.
+
+=item lock
+
+Whether C<DB_INIT_LOCK> is passed. Defaults to true.
+
+Can be set to false if B<ALL> concurrent instances are readonly.
+
+=item deadlock_detection
+
+Whether or not lock detection is set. The default is true.
+
+=item lk_detect
+
+The type of lock detection to use if C<deadlock_detection> is set. Defaults to
+C<DB_LOCK_DEFAULT>. Additional possible values are C<DB_LOCK_MAXLOCKS>,
+C<DB_LOCK_MINLOCKS>, C<DB_LOCK_MINWRITE>, C<DB_LOCK_OLDEST>, C<DB_LOCK_RANDOM>,
+and C<DB_LOCK_YOUNGEST>. See C<set_lk_detect> in the Berkeley DB reference guide.
 
 =item readonly
 
