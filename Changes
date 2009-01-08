@@ -1,3 +1,10 @@
+0.11
+	- Enable locking by default
+	- Add deadlock detection (enabled by default)
+	- txn_begin/txn_commit/txn_rollback no longer take arbitrary transaction
+	  arguments due to deadlocks caused when not reenabling the parent
+	  transaction after rolling back a child transaction.
+
 0.10
 	- Try to not die if DB_MULTIVERSION isn't defined and the user is not trying to use it
 
