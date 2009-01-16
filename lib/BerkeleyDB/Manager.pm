@@ -17,7 +17,7 @@ use Moose::Util::TypeConstraints;
 
 use namespace::clean -except => 'meta';
 
-our $VERSION = "0.11";
+our $VERSION = "0.12";
 
 use constant HAVE_DB_MULTIVERSION => do { local $@; eval { DB_MULTIVERSION; 1 } };
 
