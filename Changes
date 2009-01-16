@@ -1,3 +1,6 @@
+0.12
+	- add auto_checkpoint
+
 0.11
 	- Enable locking by default
 	- Add deadlock detection (enabled by default)
