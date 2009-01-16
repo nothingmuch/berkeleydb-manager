@@ -1074,9 +1074,7 @@ C<flag> is ignored.
 
 =head1 VERSION CONTROL
 
-This module is maintained using Darcs. You can get the latest version from
-L<http://nothingmuch.woobling.org/code>, and use C<darcs send> to commit
-changes.
+L<http://github.com/nothingmuch/berkeleydb-manager>
 
 =head1 AUTHOR
 
