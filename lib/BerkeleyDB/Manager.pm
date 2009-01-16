@@ -53,6 +53,7 @@ has [qw(
 	snapshot
 	lock
 	deadlock_detection
+	auto_checkpoint
 	sync
 	log
 )] => (
@@ -115,6 +116,18 @@ has chunk_size => (
 	isa => "Int",
 	is  => "rw",
 	default => 500,
+);
+
+has checkpoint_kbyte => (
+	isa => "Int",
+	is  => "ro",
+	default => 20 * 1024, # 20 MB
+);
+
+has checkpoint_min => (
+	isa => "Int",
+	is  => "ro",
+	default => 1,
 );
 
 sub _build_env_flags {
@@ -443,7 +456,9 @@ has _transaction_stack => (
 sub _current_transaction {
 	my $self = shift;
 
-	if ( my $frame = $self->_transaction_stack->[-1] ) {
+	my $stack = $self->_transaction_stack;
+
+	if ( @$stack and my $frame = $stack->[-1] ) {
 		return $frame->[0];
 	}
 
@@ -554,6 +569,11 @@ sub txn_commit {
 
 	$self->_pop_transaction;
 
+	if ( $self->auto_checkpoint and not $self->_current_transaction ) {
+		# we just popped a root txn, try an auto checkpoint
+		$self->txn_checkpoint;
+	}
+
 	return 1;
 }
 
@@ -569,6 +589,14 @@ sub txn_rollback {
 	$self->_pop_transaction;
 
 	return 1;
+}
+
+sub txn_checkpoint {
+	my $self = shift;
+
+	if ( my $ret = $self->env->txn_checkpoint( $self->checkpoint_kbyte, $self->checkpoint_min, 0 ) ) {
+		die $ret;
+	}
 }
 
 sub dup_cursor_stream {
@@ -805,6 +833,29 @@ Defaults to true.
 If you turn this off note that all database handles must be opened inside a
 transaction, unless transactions are disabled.
 
+=item auto_checkpoint
+
+When true C<txn_checkpoint> will be called with C<checkpoint_kbyte> and
+C<checkpoint_min> every time a top level transaction is comitted.
+
+Defaults to true.
+
+=item checkpoint_kbyte
+
+Passed to C<txn_checkpoint>. C<txn_checkpoint> will write a checkpoint if that
+many kilobytes of data have been written since the last checkpoint.
+
+Defaults to 20 megabytes. If transactions are comitted quickly this value
+should avoid checkpoints being made too often.
+
+=item checkpoint_min
+
+Passed to C<txn_checkpoint>. C<txn_checkpoint> will write a checkpoint if the
+last checkpoint was more than this many minutes ago.
+
+Defaults to 1 minute. If transactions are not committed very often this
+parameter should balance the large-ish default value for C<checkpoint_kbyte>.
+
 =item recover
 
 If true C<DB_REGISTER> and C<DB_RECOVER> are enabled in the flags to the env.
@@ -998,6 +1049,12 @@ Will die on error.
 =item txn_rollback
 
 Rollback the current transaction.
+
+=item txn_checkpoint
+
+Calls C<txn_checkpoint> on C<env> with C<checkpoint_kbyte> and C<checkpoint_min>.
+
+This is called automatically by C<txn_commit> if C<auto_checkpoint> is set.
 
 =item associate %args
 
