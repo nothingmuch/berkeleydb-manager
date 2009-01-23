@@ -15,3 +15,6 @@
 	- recover
 	- compact
 - docs/ref/am_misc/get_bulk.html
+- RMW flag
+- rpc
+- replication
