@@ -614,6 +614,10 @@ sub dup_cursor_stream {
 
 	$cursor ||= ( $db || croak "either 'cursor' or 'db' is a required argument" )->db_cursor;
 
+	unless ( defined $cursor ) {
+		die $BerkeleyDB::Error;
+	}
+
 	$first ||= sub {
 		my ( $c, $r ) = @_;
 		my $v;
